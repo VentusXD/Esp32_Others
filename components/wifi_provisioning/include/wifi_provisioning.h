@@ -52,7 +52,7 @@ typedef struct {
 } wifi_prov_info_t;
 
 void wifi_provisioning_get_status(wifi_prov_info_t *out_info);
-
+void wifi_low_power_mode(void);
 
 
 #ifdef __cplusplus

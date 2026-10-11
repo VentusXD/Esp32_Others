@@ -394,8 +394,14 @@ void wifi_provisioning_get_status(wifi_prov_info_t *out_info)
             break;
     }
 
-
-
-
     
+}
+
+
+void wifi_low_power_mode(void)
+{
+    ESP_LOGI(TAG, "Setting WiFi to low power mode");
+    esp_wifi_set_mode(WIFI_MODE_STA); // Set WiFi to station mode (AP+STA -> STA)
+    esp_wifi_set_ps(WIFI_PS_MIN_MODEM); // modem power saving
+
 }

@@ -1,8 +1,10 @@
-#include "mqtt_tb.h"
-
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
+
+#include "mqtt_tb.h"
+
+#include "cJSON.h"   // espidf ver 5.x.x  
 
 #include "esp_log.h"
 #include "mqtt_client.h"   // Libreria MQTT de ESP-IDF Dependencia Importante
@@ -13,11 +15,16 @@ static const char *TAG = "TB_MQTT";
 #define TB_ACCESS_TOKEN    "5w51m0m9gqzisjpfa12x"
 #define TB_BROKER_URI      "mqtt://mqtt.eu.thingsboard.cloud:1883"
 #define TB_TOPIC_TELEMETRY "v1/devices/me/telemetry"
+#define TB_TOPIC_RPC       "v1/devices/me/rpc/request/+"
 // ============================================================
 
 static esp_mqtt_client_handle_t s_mqtt_client = NULL;
 static volatile bool s_connected = false;    // Volatile indicar que la variable puede ser modificada por interrupciones o 
                                             // hilos, evitando optimizaciones del compilador, evitar problemas de sincronización.
+
+
+volatile uint16_t valor = 0;  // RPC dato
+
 
 // ---------- Manejador de Eventos ----------
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
@@ -29,7 +36,37 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
         case MQTT_EVENT_CONNECTED:  
             s_connected = true;
             ESP_LOGI(TAG, "Conectado a ThingsBoard");
+
+            esp_mqtt_client_subscribe(event->client, TB_TOPIC_RPC, 1);  // RPC: escuchar peticiones   ****
+
             break;
+/*
+typedef struct cJSON {
+    struct cJSON *next, *prev; // Para listas enlazadas (arrays u objetos)
+    struct cJSON *child;      // Si es un array u objeto, apunta al primer elemento
+    int type;                 // Tipo de dato (cJSON_Number, cJSON_String, etc.)
+    char *valuestring;        // Valor si es texto
+    int valueint;             // Valor si es entero
+    double valuedouble;       // Valor si es flotante
+    char *string;             // Clave/Nombre de la propiedad en un objeto
+} cJSON;
+ */
+        case MQTT_EVENT_DATA: {   // RPC one-way                                                      ****
+            // payload = {"method":"setValor","params":30}
+            cJSON *root   = cJSON_ParseWithLength(event->data, event->data_len);
+            cJSON *method = cJSON_GetObjectItem(root, "method");
+            cJSON *params = cJSON_GetObjectItem(root, "params"); 
+            /*cJSON_GetObjectItem(const cJSON * const object, const char * const string): sensible a mayúsculas/minúsculas).
+              cJSON_GetObjectItemCaseSensitive(...): comparación estricta de mayúsculas/minúsculas.*/
+ 
+            if (strcmp(method->valuestring, "setValor") == 0) {
+                valor = params->valueint;
+                ESP_LOGI(TAG, "RPC setValor valor = %u", valor);
+            }
+            cJSON_Delete(root); cJSON_Delete(method); cJSON_Delete(params);  // Liberar memoria 
+            break;
+        }
+
 
         case MQTT_EVENT_DISCONNECTED: 
             s_connected = false;
@@ -50,7 +87,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
     }
 }
 
-// ---------- API Pública ----------
+// ---------- API Publica ----------
 void tb_mqtt_start(void)
 {
     if (s_mqtt_client != NULL) {

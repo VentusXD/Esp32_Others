@@ -3,7 +3,6 @@
 #include "nvs_flash.h"
 
 // Power Management CPU frequency scaling and sleep modes
-#include "esp_pm.h" 
 #include "esp_sleep.h"
 //#include <dht.h> // https://components.espressif.com/components/esp-idf-lib/dht/versions/1.2.0/readme  version oficial 1.2.0
 
@@ -11,7 +10,6 @@
 #include "wifi_provisioning.h"
 #include "dht11.h"
 #include "ldr.h"
-#include "rpc.h"
 
 static const char *TAG = "TB_MAIN";
 static const char *TAGW = "WIFI_PROV";
@@ -41,9 +39,8 @@ void dht_task(void *param) {
 
 
 void app_main(void) {
-    
-    // NOTA: Wi-Fi debe estar completamente conectado antes de llamar a mqtt_app_start()
-        esp_err_t ret = nvs_flash_init();
+    //nvs_flash_erase(); Borrado de config anterior 
+    esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();

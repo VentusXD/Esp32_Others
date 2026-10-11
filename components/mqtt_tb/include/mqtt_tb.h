@@ -6,6 +6,7 @@
 extern "C" {
 #endif
 
+volatile uint16_t valor;
 /**
  * @brief Inicializa y arranca el cliente MQTT de ThingsBoard.
  *

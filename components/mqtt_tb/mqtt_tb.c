@@ -23,7 +23,8 @@ static volatile bool s_connected = false;    // Volatile indicar que la variable
                                             // hilos, evitando optimizaciones del compilador, evitar problemas de sincronización.
 
 
-volatile uint16_t valor = 0;  // RPC dato
+volatile uint16_t valor = 2000;  // RPC dato
+static const char *method = "setValor";  // RPC metodo
 
 
 // ---------- Manejador de Eventos ----------
@@ -59,7 +60,7 @@ typedef struct cJSON {
             /*cJSON_GetObjectItem(const cJSON * const object, const char * const string): sensible a mayúsculas/minúsculas).
               cJSON_GetObjectItemCaseSensitive(...): comparación estricta de mayúsculas/minúsculas.*/
  
-            if (strcmp(method->valuestring, "setValor") == 0) {
+            if (strcmp(method->valuestring, method) == 0) {     // Method RPC set
                 valor = params->valueint;
                 ESP_LOGI(TAG, "RPC setValor valor = %u", valor);
             }

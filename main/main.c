@@ -33,7 +33,8 @@ void dht_task(void *param) {
         } else {
             ESP_LOGE(TAG, "Error al leer el sensor DHT11");
         }
-        vTaskDelay(pdMS_TO_TICKS(5000)); // Esperar 5 segundos antes de la siguiente lectura
+        ESP_LOGI(TAG, "Esperando %i s", rpc_get_valor());  // Comprobar RPC setValor
+        vTaskDelay(pdMS_TO_TICKS(rpc_get_valor()*1000)); // Esperar volatil RPC setValor
     }   // por limitacion de thingboard por lo que no hace falta usar xqueue
 }
 
@@ -68,17 +69,5 @@ void app_main(void) {
     xTaskCreate(ldr_task, "ldr_task", configMINIMAL_STACK_SIZE * 4, NULL, 5, NULL);
 
 
-
-    /*
-    esp_sleep_enable_timer_wakeup(10000000); // 10 segundos
-    
-    pm_config_t pm_config = {
-        .max_freq_mhz = CONFIG_EXAMPLE_PM_MAX_FREQ,
-        .min_freq_mhz = CONFIG_EXAMPLE_PM_MIN_FREQ,
-        .light_sleep_enable = CONFIG_EXAMPLE_PM_LIGHT_SLEEP_ENABLE,
-    };
-
-    esp_pm_configure(&pm_config);
-    */
 
 }

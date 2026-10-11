@@ -6,7 +6,6 @@
 extern "C" {
 #endif
 
-volatile uint16_t valor;
 /**
  * @brief Inicializa y arranca el cliente MQTT de ThingsBoard.
  *
@@ -40,6 +39,9 @@ esp_err_t tb_mqtt_publish_json(const char *json_payload);
  * @brief Devuelve true si el cliente MQTT está conectado a ThingsBoard.
  */
 bool tb_mqtt_is_connected(void);
+
+uint16_t rpc_get_valor(void);
+
 
 #ifdef __cplusplus
 }

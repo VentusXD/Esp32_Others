@@ -4,7 +4,7 @@
 
 #include "mqtt_tb.h"
 
-#include "cJSON.h"   // espidf ver 5.x.x  
+#include "cJSON.h"   // espidf ver 5.5.5
 
 #include "esp_log.h"
 #include "mqtt_client.h"   // Libreria MQTT de ESP-IDF Dependencia Importante
@@ -23,8 +23,8 @@ static volatile bool s_connected = false;    // Volatile indicar que la variable
                                             // hilos, evitando optimizaciones del compilador, evitar problemas de sincronización.
 
 
-volatile uint16_t valor = 2000;  // RPC dato
-static const char *method = "setValor";  // RPC metodo
+volatile uint16_t valor = 2;  // RPC dato en segundos
+static const char *method_global = "setValor";  // RPC metodo
 
 
 // ---------- Manejador de Eventos ----------
@@ -60,11 +60,11 @@ typedef struct cJSON {
             /*cJSON_GetObjectItem(const cJSON * const object, const char * const string): sensible a mayúsculas/minúsculas).
               cJSON_GetObjectItemCaseSensitive(...): comparación estricta de mayúsculas/minúsculas.*/
  
-            if (strcmp(method->valuestring, method) == 0) {     // Method RPC set
+            if (strcmp(method->valuestring, method_global) == 0) {     // Method RPC set
                 valor = params->valueint;
                 ESP_LOGI(TAG, "RPC setValor valor = %u", valor);
             }
-            cJSON_Delete(root); cJSON_Delete(method); cJSON_Delete(params);  // Liberar memoria 
+            cJSON_Delete(root); // cJSON_Delete(method); cJSON_Delete(params);  no hace falta se elimina recursivo
             break;
         }
 
@@ -178,4 +178,10 @@ esp_err_t tb_mqtt_publish_json(const char *json_payload)   // Publicar un mensaj
 bool tb_mqtt_is_connected(void)   // Estado de conexion MQTT
 {
     return s_connected;
+}
+
+
+uint16_t rpc_get_valor(void)  // Obtener valor RPC
+{
+    return valor;
 }

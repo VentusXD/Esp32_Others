@@ -11,8 +11,8 @@
 #include "dht11.h"
 #include "ldr.h"
 
-static const char *TAG = "TB_MAIN";
-static const char *TAGW = "WIFI_PROV";
+static const char *TAG = "TB_MAIN ";
+static const char *TAGW = "WIFI_PROV ";
 
 dht11_t sensor = {
         .dht11_pin = GPIO_NUM_4,  // PIN
@@ -27,7 +27,7 @@ static void power_init(void); // politica de ahorro de energia
 
 
 void app_main(void) {
-    //nvs_flash_erase(); Borrado de config anterior 
+    //nvs_flash_erase(); //Borrado de config anterior 
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());
@@ -35,29 +35,31 @@ void app_main(void) {
     }
     ESP_ERROR_CHECK(ret);
     
-    power_init(); // Gestion de energia antes de arrancar el Wi-Fi
+    power_init(); // Ahorro de energia
 
     wifi_provisioning_init();
     //ble_simple_init();  // Blue muerto
     wifi_provisioning_start_webserver();
 
-    wifi_prov_info_t info;
-    wifi_provisioning_get_status(&info);
+    wifi_low_power_mode(); // bajo consumo (STA + modem sleep) Handler ENVENT HACER!!!
 
-    if (info.status == WIFI_PROV_STATUS_CONNECTED) {  // Usar para saber si hay o no wifi
-            ESP_LOGI(TAGW, "SSID: %s, IP: %s", info.ssid, info.ip_str);
-            wifi_low_power_mode(); // bajo consumo (STA + modem sleep)
+
             
-    } else if (info.status == WIFI_PROV_STATUS_FAILED) {
-            ESP_LOGW(TAGW, "Fallo al conectar a '%s': %s", info.ssid, info.reason);
-    }
-    vTaskDelay(pdMS_TO_TICKS(3000)); // Esperar 3 segundo antes de continuar
-    
     tb_mqtt_start(); 
+    
+    //prueba RPC setValor() por Thingboard
+    /*while(1){
+        ESP_LOGI(TAG, "setvalor: %i" ,rpc_get_valor()); 
+        vTaskDelay(pdMS_TO_TICKS(2000)); // Esperar 2 segundos antes de volver a leer el valor
+    }*/ 
+
+
     xTaskCreate(dht_task, "dht_task", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL);
-
-    xTaskCreate(ldr_task, "ldr_task", configMINIMAL_STACK_SIZE * 4, NULL, 5, NULL);
-
+    
+    xTaskCreate(ldr_task, "ldr_task", configMINIMAL_STACK_SIZE * 4, NULL, 5, NULL); 
+    // pasar periodo de publicacion por parametro
+    //xTaskCreate(ldr_task, "ldr_task", configMINIMAL_STACK_SIZE * 4, (void *)(uintptr_t)rpc_get_valor(), 5, NULL); 
+    // INTENTO FALLIDO
 
 
 }
@@ -86,6 +88,10 @@ void dht_task(void *param) {
 
 
 static void power_init(void) {
+// IMPORTANTE configurar 
+// Component config -> Power Management -> Enable CPU frequency scaling y Enable light sleep
+// Component config → FreeRTOS → Kernel -> configEXPECTED_IDLE_TIME_BEFORE_SLEEP tiempo de espera antes de entrar en light sleep (ms) 3000 ms
+
     esp_pm_config_t pm_cfg = { // CPU normalmente a 40 MZ
         .max_freq_mhz = 160,           // CPU a 160 MHz cuando hay trabajo
         .min_freq_mhz = 40,            // baja a 40 MHz cuando esta inactiva

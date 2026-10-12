@@ -12,7 +12,7 @@
 static const char *TAG = "TB_MQTT";
 
 // ======================= CONFIGURACION =======================
-#define TB_ACCESS_TOKEN    "5w51m0m9gqzisjpfa12x"
+#define TB_ACCESS_TOKEN    "QQijNoBcJDDCmJeul6eO"
 #define TB_BROKER_URI      "mqtt://mqtt.eu.thingsboard.cloud:1883"
 #define TB_TOPIC_TELEMETRY "v1/devices/me/telemetry"
 #define TB_TOPIC_RPC       "v1/devices/me/rpc/request/+"
@@ -59,7 +59,7 @@ typedef struct cJSON {
             cJSON *params = cJSON_GetObjectItem(root, "params"); 
             /*cJSON_GetObjectItem(const cJSON * const object, const char * const string): sensible a mayúsculas/minúsculas).
               cJSON_GetObjectItemCaseSensitive(...): comparación estricta de mayúsculas/minúsculas.*/
- 
+            
             if (strcmp(method->valuestring, method_global) == 0) {     // Method RPC set
                 valor = params->valueint;
                 ESP_LOGI(TAG, "RPC setValor valor = %u", valor);

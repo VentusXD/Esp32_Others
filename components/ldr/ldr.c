@@ -16,12 +16,12 @@
 #define LDR_ADC_CHANNEL   ADC_CHANNEL_6       // GPIO34 (ADC1_CH6)
 #define LDR_ADC_ATTEN     ADC_ATTEN_DB_12     // Rango 0-3.3 V
 #define LDR_ADC_BITWIDTH  ADC_BITWIDTH_DEFAULT
-#define LDR_PUBLISH_MS    5000                // Periodo de publicacion
+#define LDR_PUBLISH_MS    2000                // Periodo de publicacion, Cambiado por RPC setValor() en Thingboard
 
 #define N_MOVING          5                   // Num. de muestras de la media movil
 // ============================================================
 
-static const char *TAG = "LDR";
+static const char *TAG = "LDR ";
 
 static adc_oneshot_unit_handle_t s_adc_handle  = NULL;
 static adc_cali_handle_t         s_cali_handle = NULL;
@@ -103,6 +103,8 @@ esp_err_t ldr_read_mv(int *mv)
 // ---------- Tarea FreeRTOS ----------
 void ldr_task(void *param)
 {
+
+
     if (ldr_init() != ESP_OK) {
         ESP_LOGE(TAG, "No se pudo inicializar el ADC, la tarea termina");
         vTaskDelete(NULL);
@@ -119,7 +121,8 @@ void ldr_task(void *param)
 
         if (ret != ESP_OK) {
             ESP_LOGE(TAG, "Error leyendo ADC: %s", esp_err_to_name(ret));
-            vTaskDelay(pdMS_TO_TICKS(LDR_PUBLISH_MS));
+            ESP_LOGI(TAG, "Esperando %i s antes de reintentar", rpc_get_valor());
+            vTaskDelay(pdMS_TO_TICKS( rpc_get_valor()*1000 )); 
             continue;
         }
 
@@ -141,6 +144,7 @@ void ldr_task(void *param)
 
         tb_mqtt_publish_int("ldr", raw_avg);
 
-        vTaskDelay(pdMS_TO_TICKS(LDR_PUBLISH_MS));
+        ESP_LOGI(TAG, "Esperando %i s antes de la siguiente lectura", rpc_get_valor());
+        vTaskDelay(pdMS_TO_TICKS( rpc_get_valor()*1000) );
     }
 }

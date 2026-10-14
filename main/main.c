@@ -40,10 +40,6 @@ void app_main(void) {
     wifi_provisioning_init();
     //ble_simple_init();  // Blue muerto
     wifi_provisioning_start_webserver();
-
-    wifi_low_power_mode(); // bajo consumo (STA + modem sleep) Handler ENVENT HACER!!!
-
-
             
     tb_mqtt_start(); 
     

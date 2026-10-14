@@ -38,7 +38,7 @@ typedef enum {
     PROV_STATE_FAILED,
 } prov_state_t;
 
-static volatile prov_state_t s_state = PROV_STATE_IDLE;
+static volatile prov_state_t s_state = PROV_STATE_IDLE; // AUTOMATA de estado
 static char s_last_ip[16] = {0};
 static char s_current_ssid[33] = {0};
 static int  s_last_reason = 0;
@@ -95,6 +95,8 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
         ESP_LOGI(TAG, "STA got IP: " IPSTR, IP2STR(&ev->ip_info.ip));
         snprintf(s_last_ip, sizeof(s_last_ip), IPSTR, IP2STR(&ev->ip_info.ip));
         s_state = PROV_STATE_CONNECTED;
+
+        wifi_low_power_mode(); //Ahorro
     }
 }
 
@@ -109,10 +111,12 @@ void wifi_provisioning_init(void)
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(
-        WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(  
+        WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL, NULL));   // IMPORTANTE HANDLER PART
     ESP_ERROR_CHECK(esp_event_handler_instance_register(
         IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL, NULL));
+
+        
 
     wifi_config_t ap_config = {
         .ap = {
